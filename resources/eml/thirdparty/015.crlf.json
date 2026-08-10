@@ -54,7 +54,7 @@
               "by": {
                 "Name": "mx-ha.gmx.net"
               },
-              "for_": null,
+              "for_": "jonas.sterr@gmx.net",
               "with": "ESMTPS",
               "tls_version": null,
               "tls_cipher": null,

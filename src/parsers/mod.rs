@@ -100,7 +100,7 @@ impl<'x> MessageStream<'x> {
 
     #[inline(always)]
     pub fn bytes(&self, range: Range<usize>) -> &'x [u8] {
-        &self.data[range]
+        self.data.get(range).unwrap_or_default()
     }
 
     #[inline(always)]

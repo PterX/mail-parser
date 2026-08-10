@@ -484,7 +484,7 @@
                       "with": "ESMTP",
                       "tls_version": null,
                       "tls_cipher": null,
-                      "id": "1C36444F59\n",
+                      "id": "1C36444F59",
                       "ident": null,
                       "helo": null,
                       "helo_cmd": null,

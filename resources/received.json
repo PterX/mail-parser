@@ -4358,5 +4358,104 @@
         "tz_minute": 0
       }
     }
+  },
+  {
+    "header": "from mx.example.org by srv.example.com",
+    "expected": {
+      "from": {
+        "Name": "mx.example.org"
+      },
+      "by": {
+        "Name": "srv.example.com"
+      }
+    }
+  },
+  {
+    "header": "from mx.example.org by srv.example.com\r\n ",
+    "expected": {
+      "from": {
+        "Name": "mx.example.org"
+      },
+      "by": {
+        "Name": "srv.example.com"
+      }
+    }
+  },
+  {
+    "header": "from mx.example.org by srv.example.com\r\n\t",
+    "expected": {
+      "from": {
+        "Name": "mx.example.org"
+      },
+      "by": {
+        "Name": "srv.example.com"
+      }
+    }
+  },
+  {
+    "header": "from mx.example.org by srv.example.com\r\n  ",
+    "expected": {
+      "from": {
+        "Name": "mx.example.org"
+      },
+      "by": {
+        "Name": "srv.example.com"
+      }
+    }
+  },
+  {
+    "header": "from mx.example.org by srv.example.com\r\n \t ",
+    "expected": {
+      "from": {
+        "Name": "mx.example.org"
+      },
+      "by": {
+        "Name": "srv.example.com"
+      }
+    }
+  },
+  {
+    "header": "from mx.example.org by srv.example.com\n\t",
+    "expected": {
+      "from": {
+        "Name": "mx.example.org"
+      },
+      "by": {
+        "Name": "srv.example.com"
+      }
+    }
+  },
+  {
+    "header": "from mx.example.org by srv.example.com;\r\n ",
+    "expected": {
+      "from": {
+        "Name": "mx.example.org"
+      },
+      "by": {
+        "Name": "srv.example.com"
+      }
+    }
+  },
+  {
+    "header": "from mx.example.org by srv.example.com; Wed, 01 Jan 2025 00:00:00 +0000\r\n ",
+    "expected": {
+      "from": {
+        "Name": "mx.example.org"
+      },
+      "by": {
+        "Name": "srv.example.com"
+      },
+      "date": {
+        "year": 2025,
+        "month": 1,
+        "day": 1,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "tz_before_gmt": false,
+        "tz_hour": 0,
+        "tz_minute": 0
+      }
+    }
   }
 ]

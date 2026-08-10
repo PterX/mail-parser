@@ -32,7 +32,7 @@
           "value": {
             "Received": {
               "from": {
-                "Name": "nm2-vm1.bullet.mail.ukl.yahoo.com\n"
+                "Name": "nm2-vm1.bullet.mail.ukl.yahoo.com"
               },
               "from_ip": "217.146.183.227",
               "from_iprev": "nm2-vm1.bullet.mail.ukl.yahoo.com",
@@ -43,7 +43,7 @@
               "with": "SMTP",
               "tls_version": null,
               "tls_cipher": null,
-              "id": "BC0C186A2A\n",
+              "id": "BC0C186A2A",
               "ident": null,
               "helo": null,
               "helo_cmd": null,

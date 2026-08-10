@@ -379,6 +379,7 @@ impl<'x> Iterator for Tokenizer<'x, '_> {
         let bracket_depth = self.bracket_depth;
 
         let mut start_pos = self.stream.offset();
+        let mut end_pos = start_pos;
 
         while let Some(ch) = self.stream.next() {
             match ch {
@@ -439,6 +440,8 @@ impl<'x> Iterator for Tokenizer<'x, '_> {
                         break;
                     } else {
                         start_pos = self.stream.offset();
+                        end_pos = start_pos;
+                        continue;
                     }
                 }
                 b'(' => {
@@ -524,6 +527,7 @@ impl<'x> Iterator for Tokenizer<'x, '_> {
                         break;
                     } else {
                         start_pos += 1;
+                        end_pos = start_pos;
                         continue;
                     }
                 }
@@ -540,14 +544,14 @@ impl<'x> Iterator for Tokenizer<'x, '_> {
             }
 
             n_total += 1;
+            end_pos = self.stream.offset();
         }
 
         if n_total == 0 {
             return self.next_token.take();
         }
 
-        let text = std::str::from_utf8(self.stream.bytes(start_pos..self.stream.offset() - 1))
-            .unwrap_or_default();
+        let text = std::str::from_utf8(self.stream.bytes(start_pos..end_pos)).unwrap_or_default();
 
         let token = match (
             n_alpha, n_digit, n_hex, n_dot, n_at, n_other, n_colon, n_plus, n_minus, n_utf, hash,
@@ -804,7 +808,10 @@ impl Token {
 #[cfg(test)]
 mod tests {
 
-    use crate::parsers::{MessageStream, fields::load_tests};
+    use crate::{
+        MessageParser,
+        parsers::{MessageStream, fields::load_tests},
+    };
 
     #[test]
     fn parse_received() {
@@ -817,6 +824,35 @@ mod tests {
                 "failed for {:?}",
                 test.header
             );
+        }
+    }
+
+    #[test]
+    fn parse_received_truncated_fold() {
+        for message in [
+            &b"Received:\n\t"[..],
+            b"Received:\r\n ",
+            b"Received: x\r\n ",
+            b"Received: x\r\n\t",
+            b"Received: x\n ",
+            b"Received: x\n\t",
+            b"Received: x\r\n  ",
+            b"Received: x\r\n \t",
+            b"Received: x\r\n \t ",
+            b"Received: x\r\n \r",
+            b"Received: x\r\n \r\n",
+            b"Received: x\r\n \r\nbody",
+            b"Received: x\r\n y\r\n ",
+            b"Received: x;\r\n ",
+            b"To: a@b\r\nReceived: x\r\n ",
+            b"Received: from x (y)\r\n\t",
+            b"Received: from x by y;\r\n\t",
+            b"Received: ",
+            b"Received:",
+            b"Received: x",
+        ] {
+            MessageParser::default().parse(message);
+            MessageParser::default().parse_headers(message);
         }
     }
 }
