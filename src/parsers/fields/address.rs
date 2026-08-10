@@ -122,9 +122,19 @@ impl<'x> AddressParser<'x> {
                 address: concat_tokens(&mut self.mail_tokens).into(),
             }
         } else if has_name && has_comment {
-            Addr {
-                name: concat_tokens(&mut self.comment_tokens).into(),
-                address: concat_tokens(&mut self.name_tokens).into(),
+            let name = concat_tokens(&mut self.name_tokens);
+            let comment = concat_tokens(&mut self.comment_tokens);
+
+            if !name.chars().any(char::is_whitespace) {
+                Addr {
+                    name: comment.into(),
+                    address: name.into(),
+                }
+            } else {
+                Addr {
+                    name: Some(format!("{name} ({comment})").into()),
+                    address: None,
+                }
             }
         } else if has_name {
             Addr {

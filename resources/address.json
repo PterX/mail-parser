@@ -865,5 +865,46 @@
         }
       ]
     }
+  },
+  {
+    "header": "James Derrick, Steven (PGE) SCHNEIDER, Robert Williams\n",
+    "expected": {
+      "List": [
+        {
+          "name": "James Derrick",
+          "address": null
+        },
+        {
+          "name": "Steven SCHNEIDER (PGE)",
+          "address": null
+        },
+        {
+          "name": "Robert Williams",
+          "address": null
+        }
+      ]
+    }
+  },
+  {
+    "header": "James Derrick (Enron Corp)\n",
+    "expected": {
+      "List": [
+        {
+          "name": "James Derrick (Enron Corp)",
+          "address": null
+        }
+      ]
+    }
+  },
+  {
+    "header": "postmaster (The Postmaster)\n",
+    "expected": {
+      "List": [
+        {
+          "name": "The Postmaster",
+          "address": "postmaster"
+        }
+      ]
+    }
   }
 ]

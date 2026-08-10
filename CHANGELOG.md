@@ -3,6 +3,7 @@ mail-parser 0.11.6
 - Fix: Missing whitespace between a quoted name and a following encoded word (#150)
 - Fix: `panic` when a `Received` header ends with a folded line (#155)
 - Fix: `Received` header tokens losing their last character at the end of the input, retaining folding characters, and failing to parse a clause folded before its value (#155)
+- Fix: Multi-word display names followed by a comment no longer produce a fabricated address, e.g. `Steven (PGE) SCHNEIDER` (#153)
 
 mail-parser 0.11.5
 ================================
