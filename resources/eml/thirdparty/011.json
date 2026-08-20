@@ -21,9 +21,7 @@
           "offset_end": 52
         },
         {
-          "name": {
-            "other": "Delivered-To"
-          },
+          "name": "delivered_to",
           "value": {
             "Text": "admin@xyz-webserver.abcd-gestion.local"
           },

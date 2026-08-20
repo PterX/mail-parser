@@ -30,9 +30,7 @@
           "offset_end": 111
         },
         {
-          "name": {
-            "other": "Disposition-Notification-To"
-          },
+          "name": "disposition_notification_to",
           "value": {
             "Text": "<dwsauder@example.com>"
           },

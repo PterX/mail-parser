@@ -207,61 +207,229 @@ pub struct Header<'x> {
     pub offset_end: u32,
 }
 
-/// A header field
-#[derive(Debug, Clone, PartialOrd, Ord)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
-#[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Serialize, rkyv::Deserialize, rkyv::Archive)
-)]
-#[cfg_attr(feature = "rkyv", rkyv(compare(PartialEq)))]
-#[non_exhaustive]
-pub enum HeaderName<'x> {
-    Subject,
-    From,
-    To,
-    Cc,
-    Date,
-    Bcc,
-    ReplyTo,
-    Sender,
-    Comments,
-    InReplyTo,
-    Keywords,
-    Received,
-    MessageId,
-    References,
-    ReturnPath,
-    MimeVersion,
-    ContentDescription,
-    ContentId,
-    ContentLanguage,
-    ContentLocation,
-    ContentTransferEncoding,
-    ContentType,
-    ContentDisposition,
-    ResentTo,
-    ResentFrom,
-    ResentBcc,
-    ResentCc,
-    ResentSender,
-    ResentDate,
-    ResentMessageId,
-    ListArchive,
-    ListHelp,
-    ListId,
-    ListOwner,
-    ListPost,
-    ListSubscribe,
-    ListUnsubscribe,
-    Other(#[cfg_attr(feature = "rkyv", rkyv(with = rkyv::with::AsOwned))] Cow<'x, str>),
-    DkimSignature,
-    ArcAuthenticationResults,
-    ArcMessageSignature,
-    ArcSeal,
-    Dkim2Signature,
-    MessageInstance,
+macro_rules! header_names {
+    ($($variant:ident = $id:literal, $name:literal, $lc:literal;)+) => {
+        /// A header field
+        #[derive(Debug, Clone, PartialOrd, Ord)]
+        #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+        #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+        #[cfg_attr(
+            feature = "rkyv",
+            derive(rkyv::Serialize, rkyv::Deserialize, rkyv::Archive)
+        )]
+        #[cfg_attr(feature = "rkyv", rkyv(compare(PartialEq)))]
+        #[non_exhaustive]
+        pub enum HeaderName<'x> {
+            $($variant,)+
+            Other(#[cfg_attr(feature = "rkyv", rkyv(with = rkyv::with::AsOwned))] Cow<'x, str>),
+        }
+
+        impl HeaderName<'_> {
+            pub fn as_static_str(&self) -> &'static str {
+                match self {
+                    $(HeaderName::$variant => $name,)+
+                    HeaderName::Other(_) => "",
+                }
+            }
+
+            pub fn id(&self) -> u8 {
+                match self {
+                    $(HeaderName::$variant => $id,)+
+                    HeaderName::Other(_) => 37,
+                }
+            }
+
+            pub fn to_owned(&self) -> HeaderName<'static> {
+                match self {
+                    $(HeaderName::$variant => HeaderName::$variant,)+
+                    HeaderName::Other(name) => HeaderName::Other(name.to_string().into()),
+                }
+            }
+
+            pub fn into_owned(self) -> HeaderName<'static> {
+                match self {
+                    $(HeaderName::$variant => HeaderName::$variant,)+
+                    HeaderName::Other(name) => HeaderName::Other(name.into_owned().into()),
+                }
+            }
+        }
+
+        pub(crate) fn header_map(name: &[u8]) -> Option<HeaderName<'static>> {
+            hashify::tiny_map!(name,
+                $($lc => HeaderName::$variant,)+
+            )
+        }
+
+        #[cfg(feature = "rkyv")]
+        impl ArchivedHeaderName<'_> {
+            pub fn as_static_str(&self) -> &'static str {
+                match self {
+                    $(ArchivedHeaderName::$variant => $name,)+
+                    ArchivedHeaderName::Other(_) => "",
+                }
+            }
+
+            pub fn id(&self) -> u8 {
+                match self {
+                    $(ArchivedHeaderName::$variant => $id,)+
+                    ArchivedHeaderName::Other(_) => 37,
+                }
+            }
+        }
+
+        #[cfg(feature = "rkyv")]
+        impl From<&ArchivedHeaderName<'_>> for HeaderName<'static> {
+            fn from(value: &ArchivedHeaderName<'_>) -> Self {
+                match value {
+                    $(ArchivedHeaderName::$variant => HeaderName::$variant,)+
+                    ArchivedHeaderName::Other(name) => HeaderName::Other(name.to_string().into()),
+                }
+            }
+        }
+    };
+}
+
+header_names! {
+    Subject = 0, "Subject", "subject";
+    From = 1, "From", "from";
+    To = 2, "To", "to";
+    Cc = 3, "Cc", "cc";
+    Date = 4, "Date", "date";
+    Bcc = 5, "Bcc", "bcc";
+    ReplyTo = 6, "Reply-To", "reply-to";
+    Sender = 7, "Sender", "sender";
+    Comments = 8, "Comments", "comments";
+    InReplyTo = 9, "In-Reply-To", "in-reply-to";
+    Keywords = 10, "Keywords", "keywords";
+    Received = 11, "Received", "received";
+    MessageId = 12, "Message-ID", "message-id";
+    References = 13, "References", "references";
+    ReturnPath = 14, "Return-Path", "return-path";
+    MimeVersion = 15, "MIME-Version", "mime-version";
+    ContentDescription = 16, "Content-Description", "content-description";
+    ContentId = 17, "Content-ID", "content-id";
+    ContentLanguage = 18, "Content-Language", "content-language";
+    ContentLocation = 19, "Content-Location", "content-location";
+    ContentTransferEncoding = 20, "Content-Transfer-Encoding", "content-transfer-encoding";
+    ContentType = 21, "Content-Type", "content-type";
+    ContentDisposition = 22, "Content-Disposition", "content-disposition";
+    ResentTo = 23, "Resent-To", "resent-to";
+    ResentFrom = 24, "Resent-From", "resent-from";
+    ResentBcc = 25, "Resent-Bcc", "resent-bcc";
+    ResentCc = 26, "Resent-Cc", "resent-cc";
+    ResentSender = 27, "Resent-Sender", "resent-sender";
+    ResentDate = 28, "Resent-Date", "resent-date";
+    ResentMessageId = 29, "Resent-Message-ID", "resent-message-id";
+    ListArchive = 30, "List-Archive", "list-archive";
+    ListHelp = 31, "List-Help", "list-help";
+    ListId = 32, "List-ID", "list-id";
+    ListOwner = 33, "List-Owner", "list-owner";
+    ListPost = 34, "List-Post", "list-post";
+    ListSubscribe = 35, "List-Subscribe", "list-subscribe";
+    ListUnsubscribe = 36, "List-Unsubscribe", "list-unsubscribe";
+    ArcAuthenticationResults = 38, "ARC-Authentication-Results", "arc-authentication-results";
+    ArcMessageSignature = 39, "ARC-Message-Signature", "arc-message-signature";
+    ArcSeal = 40, "ARC-Seal", "arc-seal";
+    DkimSignature = 41, "DKIM-Signature", "dkim-signature";
+    Dkim2Signature = 42, "DKIM2-Signature", "dkim2-signature";
+    MessageInstance = 43, "Message-Instance", "message-instance";
+    AcceptLanguage = 44, "Accept-Language", "accept-language";
+    AlternateRecipient = 45, "Alternate-Recipient", "alternate-recipient";
+    ArchivedAt = 46, "Archived-At", "archived-at";
+    AuthenticationResults = 47, "Authentication-Results", "authentication-results";
+    AutoSubmitted = 48, "Auto-Submitted", "auto-submitted";
+    Autoforwarded = 49, "Autoforwarded", "autoforwarded";
+    Autosubmitted = 50, "Autosubmitted", "autosubmitted";
+    ContentAlternative = 51, "Content-Alternative", "content-alternative";
+    ContentDuration = 52, "Content-Duration", "content-duration";
+    ContentFeatures = 53, "Content-features", "content-features";
+    ContentMd5 = 54, "Content-MD5", "content-md5";
+    ContentTranslationType = 55, "Content-Translation-Type", "content-translation-type";
+    Conversion = 56, "Conversion", "conversion";
+    ConversionWithLoss = 57, "Conversion-With-Loss", "conversion-with-loss";
+    DlExpansionHistory = 58, "DL-Expansion-History", "dl-expansion-history";
+    DeferredDelivery = 59, "Deferred-Delivery", "deferred-delivery";
+    DeliveryDate = 60, "Delivery-Date", "delivery-date";
+    DiscardedX400IpmsExtensions = 61, "Discarded-X400-IPMS-Extensions", "discarded-x400-ipms-extensions";
+    DiscardedX400MtsExtensions = 62, "Discarded-X400-MTS-Extensions", "discarded-x400-mts-extensions";
+    DiscloseRecipients = 63, "Disclose-Recipients", "disclose-recipients";
+    DispositionNotificationOptions = 64, "Disposition-Notification-Options", "disposition-notification-options";
+    DispositionNotificationTo = 65, "Disposition-Notification-To", "disposition-notification-to";
+    DowngradedFinalRecipient = 66, "Downgraded-Final-Recipient", "downgraded-final-recipient";
+    DowngradedInReplyTo = 67, "Downgraded-In-Reply-To", "downgraded-in-reply-to";
+    DowngradedMessageId = 68, "Downgraded-Message-Id", "downgraded-message-id";
+    DowngradedOriginalRecipient = 69, "Downgraded-Original-Recipient", "downgraded-original-recipient";
+    DowngradedReferences = 70, "Downgraded-References", "downgraded-references";
+    Encoding = 71, "Encoding", "encoding";
+    Expires = 72, "Expires", "expires";
+    GenerateDeliveryReport = 73, "Generate-Delivery-Report", "generate-delivery-report";
+    HpOuter = 74, "HP-Outer", "hp-outer";
+    Importance = 75, "Importance", "importance";
+    IncompleteCopy = 76, "Incomplete-Copy", "incomplete-copy";
+    Language = 77, "Language", "language";
+    LatestDeliveryTime = 78, "Latest-Delivery-Time", "latest-delivery-time";
+    ListUnsubscribePost = 79, "List-Unsubscribe-Post", "list-unsubscribe-post";
+    MessageContext = 80, "Message-Context", "message-context";
+    MessageType = 81, "Message-Type", "message-type";
+    MmhsExemptedAddress = 82, "MMHS-Exempted-Address", "mmhs-exempted-address";
+    MmhsExtendedAuthorisationInfo = 83, "MMHS-Extended-Authorisation-Info", "mmhs-extended-authorisation-info";
+    MmhsSubjectIndicatorCodes = 84, "MMHS-Subject-Indicator-Codes", "mmhs-subject-indicator-codes";
+    MmhsHandlingInstructions = 85, "MMHS-Handling-Instructions", "mmhs-handling-instructions";
+    MmhsMessageInstructions = 86, "MMHS-Message-Instructions", "mmhs-message-instructions";
+    MmhsCodressMessageIndicator = 87, "MMHS-Codress-Message-Indicator", "mmhs-codress-message-indicator";
+    MmhsOriginatorReference = 88, "MMHS-Originator-Reference", "mmhs-originator-reference";
+    MmhsPrimaryPrecedence = 89, "MMHS-Primary-Precedence", "mmhs-primary-precedence";
+    MmhsCopyPrecedence = 90, "MMHS-Copy-Precedence", "mmhs-copy-precedence";
+    MmhsMessageType = 91, "MMHS-Message-Type", "mmhs-message-type";
+    MmhsOtherRecipientsIndicatorTo = 92, "MMHS-Other-Recipients-Indicator-To", "mmhs-other-recipients-indicator-to";
+    MmhsOtherRecipientsIndicatorCc = 93, "MMHS-Other-Recipients-Indicator-CC", "mmhs-other-recipients-indicator-cc";
+    MmhsAcp127MessageIdentifier = 94, "MMHS-Acp127-Message-Identifier", "mmhs-acp127-message-identifier";
+    MmhsOriginatorPlad = 95, "MMHS-Originator-PLAD", "mmhs-originator-plad";
+    MtPriority = 96, "MT-Priority", "mt-priority";
+    Organization = 97, "Organization", "organization";
+    OriginalEncodedInformationTypes = 98, "Original-Encoded-Information-Types", "original-encoded-information-types";
+    OriginalFrom = 99, "Original-From", "original-from";
+    OriginalMessageId = 100, "Original-Message-ID", "original-message-id";
+    OriginalRecipient = 101, "Original-Recipient", "original-recipient";
+    OriginatorReturnAddress = 102, "Originator-Return-Address", "originator-return-address";
+    OriginalSubject = 103, "Original-Subject", "original-subject";
+    PicsLabel = 104, "PICS-Label", "pics-label";
+    PreventNonDeliveryReport = 105, "Prevent-NonDelivery-Report", "prevent-nondelivery-report";
+    Priority = 106, "Priority", "priority";
+    ReceivedSpf = 107, "Received-SPF", "received-spf";
+    ReplyBy = 108, "Reply-By", "reply-by";
+    RequireRecipientValidSince = 109, "Require-Recipient-Valid-Since", "require-recipient-valid-since";
+    Sensitivity = 110, "Sensitivity", "sensitivity";
+    Solicitation = 111, "Solicitation", "solicitation";
+    Supersedes = 112, "Supersedes", "supersedes";
+    TlsReportDomain = 113, "TLS-Report-Domain", "tls-report-domain";
+    TlsReportSubmitter = 114, "TLS-Report-Submitter", "tls-report-submitter";
+    TlsRequired = 115, "TLS-Required", "tls-required";
+    VbrInfo = 116, "VBR-Info", "vbr-info";
+    X400ContentIdentifier = 117, "X400-Content-Identifier", "x400-content-identifier";
+    X400ContentReturn = 118, "X400-Content-Return", "x400-content-return";
+    X400ContentType = 119, "X400-Content-Type", "x400-content-type";
+    X400MtsIdentifier = 120, "X400-MTS-Identifier", "x400-mts-identifier";
+    X400Originator = 121, "X400-Originator", "x400-originator";
+    X400Received = 122, "X400-Received", "x400-received";
+    X400Recipients = 123, "X400-Recipients", "x400-recipients";
+    X400Trace = 124, "X400-Trace", "x400-trace";
+    ApparentlyTo = 125, "Apparently-To", "apparently-to";
+    Author = 126, "Author", "author";
+    CfblAddress = 127, "CFBL-Address", "cfbl-address";
+    CfblFeedbackId = 128, "CFBL-Feedback-ID", "cfbl-feedback-id";
+    DeliveredTo = 129, "Delivered-To", "delivered-to";
+    EdiintFeatures = 130, "EDIINT-Features", "ediint-features";
+    EesstVersion = 131, "Eesst-Version", "eesst-version";
+    ErrorsTo = 132, "Errors-To", "errors-to";
+    Face = 133, "Face", "face";
+    FormSub = 134, "Form-Sub", "form-sub";
+    JabberId = 135, "Jabber-ID", "jabber-id";
+    MmhsAuthorizingUsers = 136, "MMHS-Authorizing-Users", "mmhs-authorizing-users";
+    Privicon = 137, "Privicon", "privicon";
+    SioLabel = 138, "SIO-Label", "sio-label";
+    SioLabelHistory = 139, "SIO-Label-History", "sio-label-history";
+    WrongRecipient = 140, "Wrong-Recipient", "wrong-recipient";
 }
 
 /// Parsed header value.

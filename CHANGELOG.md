@@ -1,5 +1,6 @@
 mail-parser 0.11.7
 ================================
+- Added more IANA headers.
 - Fix: `DateTime::to_timezone` corrupting non-whole-hour offsets by storing leftover seconds in `tz_minute` (#158)
 
 mail-parser 0.11.6

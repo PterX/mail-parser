@@ -4,17 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0 OR MIT
  */
 
-use std::fmt::Display;
-
-use rkyv::{string::ArchivedString, vec::ArchivedVec};
-
 use crate::{
     Addr, Address, ArchivedAddr, ArchivedAddress, ArchivedContentType, ArchivedDateTime,
     ArchivedEncoding, ArchivedGreeting, ArchivedGroup, ArchivedHeader, ArchivedHeaderName,
     ArchivedHeaderValue, ArchivedHost, ArchivedProtocol, ArchivedReceived, ArchivedTlsVersion,
-    Attribute, ContentType, DateTime, Greeting, Group, HeaderName, HeaderValue, Host, Protocol,
-    Received, TlsVersion,
+    Attribute, ContentType, DateTime, Greeting, Group, HeaderValue, Host, Protocol, Received,
+    TlsVersion,
 };
+use rkyv::{string::ArchivedString, vec::ArchivedVec};
+use std::fmt::Display;
 
 pub trait ArchivedGetHeader<'x> {
     fn header_value(&self, name: &ArchivedHeaderName<'x>) -> Option<&ArchivedHeaderValue<'x>>;
@@ -36,101 +34,10 @@ impl<'x> ArchivedGetHeader<'x> for ArchivedVec<ArchivedHeader<'x>> {
 }
 
 impl ArchivedHeaderName<'_> {
-    pub fn id(&self) -> u8 {
-        match self {
-            ArchivedHeaderName::Subject => 0,
-            ArchivedHeaderName::From => 1,
-            ArchivedHeaderName::To => 2,
-            ArchivedHeaderName::Cc => 3,
-            ArchivedHeaderName::Date => 4,
-            ArchivedHeaderName::Bcc => 5,
-            ArchivedHeaderName::ReplyTo => 6,
-            ArchivedHeaderName::Sender => 7,
-            ArchivedHeaderName::Comments => 8,
-            ArchivedHeaderName::InReplyTo => 9,
-            ArchivedHeaderName::Keywords => 10,
-            ArchivedHeaderName::Received => 11,
-            ArchivedHeaderName::MessageId => 12,
-            ArchivedHeaderName::References => 13,
-            ArchivedHeaderName::ReturnPath => 14,
-            ArchivedHeaderName::MimeVersion => 15,
-            ArchivedHeaderName::ContentDescription => 16,
-            ArchivedHeaderName::ContentId => 17,
-            ArchivedHeaderName::ContentLanguage => 18,
-            ArchivedHeaderName::ContentLocation => 19,
-            ArchivedHeaderName::ContentTransferEncoding => 20,
-            ArchivedHeaderName::ContentType => 21,
-            ArchivedHeaderName::ContentDisposition => 22,
-            ArchivedHeaderName::ResentTo => 23,
-            ArchivedHeaderName::ResentFrom => 24,
-            ArchivedHeaderName::ResentBcc => 25,
-            ArchivedHeaderName::ResentCc => 26,
-            ArchivedHeaderName::ResentSender => 27,
-            ArchivedHeaderName::ResentDate => 28,
-            ArchivedHeaderName::ResentMessageId => 29,
-            ArchivedHeaderName::ListArchive => 30,
-            ArchivedHeaderName::ListHelp => 31,
-            ArchivedHeaderName::ListId => 32,
-            ArchivedHeaderName::ListOwner => 33,
-            ArchivedHeaderName::ListPost => 34,
-            ArchivedHeaderName::ListSubscribe => 35,
-            ArchivedHeaderName::ListUnsubscribe => 36,
-            ArchivedHeaderName::Other(_) => 37,
-            ArchivedHeaderName::ArcAuthenticationResults => 38,
-            ArchivedHeaderName::ArcMessageSignature => 39,
-            ArchivedHeaderName::ArcSeal => 40,
-            ArchivedHeaderName::DkimSignature => 41,
-            ArchivedHeaderName::Dkim2Signature => 42,
-            ArchivedHeaderName::MessageInstance => 43,
-        }
-    }
-
     pub fn as_str(&self) -> &str {
         match self {
-            ArchivedHeaderName::Subject => "Subject",
-            ArchivedHeaderName::From => "From",
-            ArchivedHeaderName::To => "To",
-            ArchivedHeaderName::Cc => "Cc",
-            ArchivedHeaderName::Date => "Date",
-            ArchivedHeaderName::Bcc => "Bcc",
-            ArchivedHeaderName::ReplyTo => "Reply-To",
-            ArchivedHeaderName::Sender => "Sender",
-            ArchivedHeaderName::Comments => "Comments",
-            ArchivedHeaderName::InReplyTo => "In-Reply-To",
-            ArchivedHeaderName::Keywords => "Keywords",
-            ArchivedHeaderName::Received => "Received",
-            ArchivedHeaderName::MessageId => "Message-ID",
-            ArchivedHeaderName::References => "References",
-            ArchivedHeaderName::ReturnPath => "Return-Path",
-            ArchivedHeaderName::MimeVersion => "MIME-Version",
-            ArchivedHeaderName::ContentDescription => "Content-Description",
-            ArchivedHeaderName::ContentId => "Content-ID",
-            ArchivedHeaderName::ContentLanguage => "Content-Language",
-            ArchivedHeaderName::ContentLocation => "Content-Location",
-            ArchivedHeaderName::ContentTransferEncoding => "Content-Transfer-Encoding",
-            ArchivedHeaderName::ContentType => "Content-Type",
-            ArchivedHeaderName::ContentDisposition => "Content-Disposition",
-            ArchivedHeaderName::ResentTo => "Resent-To",
-            ArchivedHeaderName::ResentFrom => "Resent-From",
-            ArchivedHeaderName::ResentBcc => "Resent-Bcc",
-            ArchivedHeaderName::ResentCc => "Resent-Cc",
-            ArchivedHeaderName::ResentSender => "Resent-Sender",
-            ArchivedHeaderName::ResentDate => "Resent-Date",
-            ArchivedHeaderName::ResentMessageId => "Resent-Message-ID",
-            ArchivedHeaderName::ListArchive => "List-Archive",
-            ArchivedHeaderName::ListHelp => "List-Help",
-            ArchivedHeaderName::ListId => "List-ID",
-            ArchivedHeaderName::ListOwner => "List-Owner",
-            ArchivedHeaderName::ListPost => "List-Post",
-            ArchivedHeaderName::ListSubscribe => "List-Subscribe",
-            ArchivedHeaderName::ListUnsubscribe => "List-Unsubscribe",
-            ArchivedHeaderName::ArcAuthenticationResults => "ARC-Authentication-Results",
-            ArchivedHeaderName::ArcMessageSignature => "ARC-Message-Signature",
-            ArchivedHeaderName::ArcSeal => "ARC-Seal",
-            ArchivedHeaderName::DkimSignature => "DKIM-Signature",
-            ArchivedHeaderName::Dkim2Signature => "DKIM2-Signature",
-            ArchivedHeaderName::MessageInstance => "Message-Instance",
-            ArchivedHeaderName::Other(v) => v.as_str(),
+            ArchivedHeaderName::Other(other) => other.as_str(),
+            _ => self.as_static_str(),
         }
     }
 
@@ -168,50 +75,8 @@ impl PartialEq for ArchivedHeaderName<'_> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Other(a), Self::Other(b)) => a.eq_ignore_ascii_case(b),
-            (Self::Subject, Self::Subject) => true,
-            (Self::From, Self::From) => true,
-            (Self::To, Self::To) => true,
-            (Self::Cc, Self::Cc) => true,
-            (Self::Date, Self::Date) => true,
-            (Self::Bcc, Self::Bcc) => true,
-            (Self::ReplyTo, Self::ReplyTo) => true,
-            (Self::Sender, Self::Sender) => true,
-            (Self::Comments, Self::Comments) => true,
-            (Self::InReplyTo, Self::InReplyTo) => true,
-            (Self::Keywords, Self::Keywords) => true,
-            (Self::Received, Self::Received) => true,
-            (Self::MessageId, Self::MessageId) => true,
-            (Self::References, Self::References) => true,
-            (Self::ReturnPath, Self::ReturnPath) => true,
-            (Self::MimeVersion, Self::MimeVersion) => true,
-            (Self::ContentDescription, Self::ContentDescription) => true,
-            (Self::ContentId, Self::ContentId) => true,
-            (Self::ContentLanguage, Self::ContentLanguage) => true,
-            (Self::ContentLocation, Self::ContentLocation) => true,
-            (Self::ContentTransferEncoding, Self::ContentTransferEncoding) => true,
-            (Self::ContentType, Self::ContentType) => true,
-            (Self::ContentDisposition, Self::ContentDisposition) => true,
-            (Self::ResentTo, Self::ResentTo) => true,
-            (Self::ResentFrom, Self::ResentFrom) => true,
-            (Self::ResentBcc, Self::ResentBcc) => true,
-            (Self::ResentCc, Self::ResentCc) => true,
-            (Self::ResentSender, Self::ResentSender) => true,
-            (Self::ResentDate, Self::ResentDate) => true,
-            (Self::ResentMessageId, Self::ResentMessageId) => true,
-            (Self::ListArchive, Self::ListArchive) => true,
-            (Self::ListHelp, Self::ListHelp) => true,
-            (Self::ListId, Self::ListId) => true,
-            (Self::ListOwner, Self::ListOwner) => true,
-            (Self::ListPost, Self::ListPost) => true,
-            (Self::ListSubscribe, Self::ListSubscribe) => true,
-            (Self::ListUnsubscribe, Self::ListUnsubscribe) => true,
-            (Self::ArcAuthenticationResults, Self::ArcAuthenticationResults) => true,
-            (Self::ArcMessageSignature, Self::ArcMessageSignature) => true,
-            (Self::ArcSeal, Self::ArcSeal) => true,
-            (Self::DkimSignature, Self::DkimSignature) => true,
-            (Self::Dkim2Signature, Self::Dkim2Signature) => true,
-            (Self::MessageInstance, Self::MessageInstance) => true,
-            _ => false,
+            (Self::Other(_), _) | (_, Self::Other(_)) => false,
+            _ => self.id() == other.id(),
         }
     }
 }
@@ -230,57 +95,6 @@ impl std::hash::Hash for ArchivedHeaderName<'_> {
 }
 
 impl Eq for ArchivedHeaderName<'_> {}
-
-impl From<&ArchivedHeaderName<'_>> for HeaderName<'static> {
-    fn from(value: &ArchivedHeaderName<'_>) -> Self {
-        match value {
-            ArchivedHeaderName::Subject => HeaderName::Subject,
-            ArchivedHeaderName::From => HeaderName::From,
-            ArchivedHeaderName::To => HeaderName::To,
-            ArchivedHeaderName::Cc => HeaderName::Cc,
-            ArchivedHeaderName::Date => HeaderName::Date,
-            ArchivedHeaderName::Bcc => HeaderName::Bcc,
-            ArchivedHeaderName::ReplyTo => HeaderName::ReplyTo,
-            ArchivedHeaderName::Sender => HeaderName::Sender,
-            ArchivedHeaderName::Comments => HeaderName::Comments,
-            ArchivedHeaderName::InReplyTo => HeaderName::InReplyTo,
-            ArchivedHeaderName::Keywords => HeaderName::Keywords,
-            ArchivedHeaderName::Received => HeaderName::Received,
-            ArchivedHeaderName::MessageId => HeaderName::MessageId,
-            ArchivedHeaderName::References => HeaderName::References,
-            ArchivedHeaderName::ReturnPath => HeaderName::ReturnPath,
-            ArchivedHeaderName::MimeVersion => HeaderName::MimeVersion,
-            ArchivedHeaderName::ContentDescription => HeaderName::ContentDescription,
-            ArchivedHeaderName::ContentId => HeaderName::ContentId,
-            ArchivedHeaderName::ContentLanguage => HeaderName::ContentLanguage,
-            ArchivedHeaderName::ContentLocation => HeaderName::ContentLocation,
-            ArchivedHeaderName::ContentTransferEncoding => HeaderName::ContentTransferEncoding,
-            ArchivedHeaderName::ContentType => HeaderName::ContentType,
-            ArchivedHeaderName::ContentDisposition => HeaderName::ContentDisposition,
-            ArchivedHeaderName::ResentTo => HeaderName::ResentTo,
-            ArchivedHeaderName::ResentFrom => HeaderName::ResentFrom,
-            ArchivedHeaderName::ResentBcc => HeaderName::ResentBcc,
-            ArchivedHeaderName::ResentCc => HeaderName::ResentCc,
-            ArchivedHeaderName::ResentSender => HeaderName::ResentSender,
-            ArchivedHeaderName::ResentDate => HeaderName::ResentDate,
-            ArchivedHeaderName::ResentMessageId => HeaderName::ResentMessageId,
-            ArchivedHeaderName::ListArchive => HeaderName::ListArchive,
-            ArchivedHeaderName::ListHelp => HeaderName::ListHelp,
-            ArchivedHeaderName::ListId => HeaderName::ListId,
-            ArchivedHeaderName::ListOwner => HeaderName::ListOwner,
-            ArchivedHeaderName::ListPost => HeaderName::ListPost,
-            ArchivedHeaderName::ListSubscribe => HeaderName::ListSubscribe,
-            ArchivedHeaderName::ListUnsubscribe => HeaderName::ListUnsubscribe,
-            ArchivedHeaderName::Other(other) => HeaderName::Other(other.to_string().into()),
-            ArchivedHeaderName::ArcAuthenticationResults => HeaderName::ArcAuthenticationResults,
-            ArchivedHeaderName::ArcMessageSignature => HeaderName::ArcMessageSignature,
-            ArchivedHeaderName::ArcSeal => HeaderName::ArcSeal,
-            ArchivedHeaderName::DkimSignature => HeaderName::DkimSignature,
-            ArchivedHeaderName::Dkim2Signature => HeaderName::Dkim2Signature,
-            ArchivedHeaderName::MessageInstance => HeaderName::MessageInstance,
-        }
-    }
-}
 
 impl From<&ArchivedHeaderValue<'_>> for HeaderValue<'static> {
     fn from(value: &ArchivedHeaderValue<'_>) -> Self {

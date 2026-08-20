@@ -21,9 +21,7 @@
           "offset_end": 35
         },
         {
-          "name": {
-            "other": "Authentication-Results"
-          },
+          "name": "authentication_results",
           "value": {
             "Text": "gmx.net; dkim=pass header.i=@proxforge.de"
           },
@@ -32,9 +30,7 @@
           "offset_end": 102
         },
         {
-          "name": {
-            "other": "Authentication-Results"
-          },
+          "name": "authentication_results",
           "value": {
             "Text": "gmx.net; dkim=pass header.i=@proxforge.de"
           },
@@ -188,9 +184,7 @@
           "offset_end": 1473
         },
         {
-          "name": {
-            "other": "Organization"
-          },
+          "name": "organization",
           "value": {
             "Text": "ProxForge"
           },
@@ -356,9 +350,7 @@
             {
               "headers": [
                 {
-                  "name": {
-                    "other": "Delivered-To"
-                  },
+                  "name": "delivered_to",
                   "value": {
                     "Text": "user@mailserver.de"
                   },
@@ -416,9 +408,7 @@
                   "offset_end": 15079
                 },
                 {
-                  "name": {
-                    "other": "Authentication-Results"
-                  },
+                  "name": "authentication_results",
                   "value": {
                     "Text": "mail.mailserver.de;\n    spf=none (mail.mailserver.de: no SPF records found for postmaster@proxmox-new.maurer-it.com) smtp.helo=proxmox-new.maurer-it.com;\n    spf=pass (mail.mailserver.de: domain of office@proxmox.com designates 94.136.29.106 as permitted sender) smtp.mailfrom=office@proxmox.com;\n    iprev=pass policy.iprev=94.136.29.106;\n    dmarc=none header.from=proxmox.com policy.dmarc=none"
                   },
@@ -427,9 +417,7 @@
                   "offset_end": 15500
                 },
                 {
-                  "name": {
-                    "other": "Received-SPF"
-                  },
+                  "name": "received_spf",
                   "value": {
                     "Text": "pass (mail.mailserver.de: domain of office@proxmox.com designates 94.136.29.106 as permitted sender)\n    receiver=mail.mailserver.de; client-ip=94.136.29.106; envelope-from=\"office@proxmox.com\"; helo=proxmox-new.maurer-it.com;"
                   },
@@ -548,9 +536,7 @@
                   "offset_end": 16702
                 },
                 {
-                  "name": {
-                    "other": "Auto-Submitted"
-                  },
+                  "name": "auto_submitted",
                   "value": {
                     "Text": "auto-generated"
                   },
@@ -709,9 +695,7 @@
                     {
                       "headers": [
                         {
-                          "name": {
-                            "other": "Delivered-To"
-                          },
+                          "name": "delivered_to",
                           "value": {
                             "Text": "user@mailserver.de"
                           },
@@ -767,9 +751,7 @@
                           "offset_end": 17611
                         },
                         {
-                          "name": {
-                            "other": "Authentication-Results"
-                          },
+                          "name": "authentication_results",
                           "value": {
                             "Text": "mail.mailserver.de;"
                           },
@@ -800,9 +782,7 @@
                           "offset_end": 17915
                         },
                         {
-                          "name": {
-                            "other": "Received-SPF"
-                          },
+                          "name": "received_spf",
                           "value": {
                             "Text": "pass (mail.mailserver.de: domain of sales@proxmox.com designates 212.224.123.68 as permitted sender)"
                           },

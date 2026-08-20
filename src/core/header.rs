@@ -4,16 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0 OR MIT
  */
 
-use core::fmt;
-use std::hash::Hash;
-use std::net::IpAddr;
-use std::{borrow::Cow, fmt::Display};
-
 use crate::{
     Address, Attribute, ContentType, DateTime, GetHeader, Greeting, Header, HeaderName,
     HeaderValue, Host, Message, MessagePart, MessagePartId, MimeHeaders, PartType, Protocol,
     Received, TlsVersion,
 };
+use core::fmt;
+use std::hash::Hash;
+use std::net::IpAddr;
+use std::{borrow::Cow, fmt::Display};
 
 impl<'x> Header<'x> {
     /// Returns the header name
@@ -253,50 +252,8 @@ impl PartialEq for HeaderName<'_> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Other(a), Self::Other(b)) => a.eq_ignore_ascii_case(b),
-            (Self::Subject, Self::Subject) => true,
-            (Self::From, Self::From) => true,
-            (Self::To, Self::To) => true,
-            (Self::Cc, Self::Cc) => true,
-            (Self::Date, Self::Date) => true,
-            (Self::Bcc, Self::Bcc) => true,
-            (Self::ReplyTo, Self::ReplyTo) => true,
-            (Self::Sender, Self::Sender) => true,
-            (Self::Comments, Self::Comments) => true,
-            (Self::InReplyTo, Self::InReplyTo) => true,
-            (Self::Keywords, Self::Keywords) => true,
-            (Self::Received, Self::Received) => true,
-            (Self::MessageId, Self::MessageId) => true,
-            (Self::References, Self::References) => true,
-            (Self::ReturnPath, Self::ReturnPath) => true,
-            (Self::MimeVersion, Self::MimeVersion) => true,
-            (Self::ContentDescription, Self::ContentDescription) => true,
-            (Self::ContentId, Self::ContentId) => true,
-            (Self::ContentLanguage, Self::ContentLanguage) => true,
-            (Self::ContentLocation, Self::ContentLocation) => true,
-            (Self::ContentTransferEncoding, Self::ContentTransferEncoding) => true,
-            (Self::ContentType, Self::ContentType) => true,
-            (Self::ContentDisposition, Self::ContentDisposition) => true,
-            (Self::ResentTo, Self::ResentTo) => true,
-            (Self::ResentFrom, Self::ResentFrom) => true,
-            (Self::ResentBcc, Self::ResentBcc) => true,
-            (Self::ResentCc, Self::ResentCc) => true,
-            (Self::ResentSender, Self::ResentSender) => true,
-            (Self::ResentDate, Self::ResentDate) => true,
-            (Self::ResentMessageId, Self::ResentMessageId) => true,
-            (Self::ListArchive, Self::ListArchive) => true,
-            (Self::ListHelp, Self::ListHelp) => true,
-            (Self::ListId, Self::ListId) => true,
-            (Self::ListOwner, Self::ListOwner) => true,
-            (Self::ListPost, Self::ListPost) => true,
-            (Self::ListSubscribe, Self::ListSubscribe) => true,
-            (Self::ListUnsubscribe, Self::ListUnsubscribe) => true,
-            (Self::ArcAuthenticationResults, Self::ArcAuthenticationResults) => true,
-            (Self::ArcMessageSignature, Self::ArcMessageSignature) => true,
-            (Self::ArcSeal, Self::ArcSeal) => true,
-            (Self::DkimSignature, Self::DkimSignature) => true,
-            (Self::Dkim2Signature, Self::Dkim2Signature) => true,
-            (Self::MessageInstance, Self::MessageInstance) => true,
-            _ => false,
+            (Self::Other(_), _) | (_, Self::Other(_)) => false,
+            _ => self.id() == other.id(),
         }
     }
 }
@@ -323,104 +280,6 @@ impl<'x> From<HeaderName<'x>> for u8 {
 }
 
 impl HeaderName<'_> {
-    pub fn to_owned(&self) -> HeaderName<'static> {
-        match self {
-            HeaderName::Other(name) => HeaderName::Other(name.to_string().into()),
-            HeaderName::Subject => HeaderName::Subject,
-            HeaderName::From => HeaderName::From,
-            HeaderName::To => HeaderName::To,
-            HeaderName::Cc => HeaderName::Cc,
-            HeaderName::Date => HeaderName::Date,
-            HeaderName::Bcc => HeaderName::Bcc,
-            HeaderName::ReplyTo => HeaderName::ReplyTo,
-            HeaderName::Sender => HeaderName::Sender,
-            HeaderName::Comments => HeaderName::Comments,
-            HeaderName::InReplyTo => HeaderName::InReplyTo,
-            HeaderName::Keywords => HeaderName::Keywords,
-            HeaderName::Received => HeaderName::Received,
-            HeaderName::MessageId => HeaderName::MessageId,
-            HeaderName::References => HeaderName::References,
-            HeaderName::ReturnPath => HeaderName::ReturnPath,
-            HeaderName::MimeVersion => HeaderName::MimeVersion,
-            HeaderName::ContentDescription => HeaderName::ContentDescription,
-            HeaderName::ContentId => HeaderName::ContentId,
-            HeaderName::ContentLanguage => HeaderName::ContentLanguage,
-            HeaderName::ContentLocation => HeaderName::ContentLocation,
-            HeaderName::ContentTransferEncoding => HeaderName::ContentTransferEncoding,
-            HeaderName::ContentType => HeaderName::ContentType,
-            HeaderName::ContentDisposition => HeaderName::ContentDisposition,
-            HeaderName::ResentTo => HeaderName::ResentTo,
-            HeaderName::ResentFrom => HeaderName::ResentFrom,
-            HeaderName::ResentBcc => HeaderName::ResentBcc,
-            HeaderName::ResentCc => HeaderName::ResentCc,
-            HeaderName::ResentSender => HeaderName::ResentSender,
-            HeaderName::ResentDate => HeaderName::ResentDate,
-            HeaderName::ResentMessageId => HeaderName::ResentMessageId,
-            HeaderName::ListArchive => HeaderName::ListArchive,
-            HeaderName::ListHelp => HeaderName::ListHelp,
-            HeaderName::ListId => HeaderName::ListId,
-            HeaderName::ListOwner => HeaderName::ListOwner,
-            HeaderName::ListPost => HeaderName::ListPost,
-            HeaderName::ListSubscribe => HeaderName::ListSubscribe,
-            HeaderName::ListUnsubscribe => HeaderName::ListUnsubscribe,
-            HeaderName::ArcAuthenticationResults => HeaderName::ArcAuthenticationResults,
-            HeaderName::ArcMessageSignature => HeaderName::ArcMessageSignature,
-            HeaderName::ArcSeal => HeaderName::ArcSeal,
-            HeaderName::DkimSignature => HeaderName::DkimSignature,
-            HeaderName::Dkim2Signature => HeaderName::Dkim2Signature,
-            HeaderName::MessageInstance => HeaderName::MessageInstance,
-        }
-    }
-
-    pub fn into_owned(self) -> HeaderName<'static> {
-        match self {
-            HeaderName::Other(name) => HeaderName::Other(name.into_owned().into()),
-            HeaderName::Subject => HeaderName::Subject,
-            HeaderName::From => HeaderName::From,
-            HeaderName::To => HeaderName::To,
-            HeaderName::Cc => HeaderName::Cc,
-            HeaderName::Date => HeaderName::Date,
-            HeaderName::Bcc => HeaderName::Bcc,
-            HeaderName::ReplyTo => HeaderName::ReplyTo,
-            HeaderName::Sender => HeaderName::Sender,
-            HeaderName::Comments => HeaderName::Comments,
-            HeaderName::InReplyTo => HeaderName::InReplyTo,
-            HeaderName::Keywords => HeaderName::Keywords,
-            HeaderName::Received => HeaderName::Received,
-            HeaderName::MessageId => HeaderName::MessageId,
-            HeaderName::References => HeaderName::References,
-            HeaderName::ReturnPath => HeaderName::ReturnPath,
-            HeaderName::MimeVersion => HeaderName::MimeVersion,
-            HeaderName::ContentDescription => HeaderName::ContentDescription,
-            HeaderName::ContentId => HeaderName::ContentId,
-            HeaderName::ContentLanguage => HeaderName::ContentLanguage,
-            HeaderName::ContentLocation => HeaderName::ContentLocation,
-            HeaderName::ContentTransferEncoding => HeaderName::ContentTransferEncoding,
-            HeaderName::ContentType => HeaderName::ContentType,
-            HeaderName::ContentDisposition => HeaderName::ContentDisposition,
-            HeaderName::ResentTo => HeaderName::ResentTo,
-            HeaderName::ResentFrom => HeaderName::ResentFrom,
-            HeaderName::ResentBcc => HeaderName::ResentBcc,
-            HeaderName::ResentCc => HeaderName::ResentCc,
-            HeaderName::ResentSender => HeaderName::ResentSender,
-            HeaderName::ResentDate => HeaderName::ResentDate,
-            HeaderName::ResentMessageId => HeaderName::ResentMessageId,
-            HeaderName::ListArchive => HeaderName::ListArchive,
-            HeaderName::ListHelp => HeaderName::ListHelp,
-            HeaderName::ListId => HeaderName::ListId,
-            HeaderName::ListOwner => HeaderName::ListOwner,
-            HeaderName::ListPost => HeaderName::ListPost,
-            HeaderName::ListSubscribe => HeaderName::ListSubscribe,
-            HeaderName::ListUnsubscribe => HeaderName::ListUnsubscribe,
-            HeaderName::ArcAuthenticationResults => HeaderName::ArcAuthenticationResults,
-            HeaderName::ArcMessageSignature => HeaderName::ArcMessageSignature,
-            HeaderName::ArcSeal => HeaderName::ArcSeal,
-            HeaderName::DkimSignature => HeaderName::DkimSignature,
-            HeaderName::Dkim2Signature => HeaderName::Dkim2Signature,
-            HeaderName::MessageInstance => HeaderName::MessageInstance,
-        }
-    }
-
     pub fn into_string(self) -> String {
         match self {
             HeaderName::Other(name) => name.into_owned(),
@@ -435,102 +294,51 @@ impl HeaderName<'_> {
         }
     }
 
-    pub fn as_static_str(&self) -> &'static str {
-        match self {
-            HeaderName::Subject => "Subject",
-            HeaderName::From => "From",
-            HeaderName::To => "To",
-            HeaderName::Cc => "Cc",
-            HeaderName::Date => "Date",
-            HeaderName::Bcc => "Bcc",
-            HeaderName::ReplyTo => "Reply-To",
-            HeaderName::Sender => "Sender",
-            HeaderName::Comments => "Comments",
-            HeaderName::InReplyTo => "In-Reply-To",
-            HeaderName::Keywords => "Keywords",
-            HeaderName::Received => "Received",
-            HeaderName::MessageId => "Message-ID",
-            HeaderName::References => "References",
-            HeaderName::ReturnPath => "Return-Path",
-            HeaderName::MimeVersion => "MIME-Version",
-            HeaderName::ContentDescription => "Content-Description",
-            HeaderName::ContentId => "Content-ID",
-            HeaderName::ContentLanguage => "Content-Language",
-            HeaderName::ContentLocation => "Content-Location",
-            HeaderName::ContentTransferEncoding => "Content-Transfer-Encoding",
-            HeaderName::ContentType => "Content-Type",
-            HeaderName::ContentDisposition => "Content-Disposition",
-            HeaderName::ResentTo => "Resent-To",
-            HeaderName::ResentFrom => "Resent-From",
-            HeaderName::ResentBcc => "Resent-Bcc",
-            HeaderName::ResentCc => "Resent-Cc",
-            HeaderName::ResentSender => "Resent-Sender",
-            HeaderName::ResentDate => "Resent-Date",
-            HeaderName::ResentMessageId => "Resent-Message-ID",
-            HeaderName::ListArchive => "List-Archive",
-            HeaderName::ListHelp => "List-Help",
-            HeaderName::ListId => "List-ID",
-            HeaderName::ListOwner => "List-Owner",
-            HeaderName::ListPost => "List-Post",
-            HeaderName::ListSubscribe => "List-Subscribe",
-            HeaderName::ListUnsubscribe => "List-Unsubscribe",
-            HeaderName::ArcAuthenticationResults => "ARC-Authentication-Results",
-            HeaderName::ArcMessageSignature => "ARC-Message-Signature",
-            HeaderName::ArcSeal => "ARC-Seal",
-            HeaderName::DkimSignature => "DKIM-Signature",
-            HeaderName::Dkim2Signature => "DKIM2-Signature",
-            HeaderName::MessageInstance => "Message-Instance",
-            HeaderName::Other(_) => "",
-        }
+    pub fn len(&self) -> usize {
+        self.as_str().len()
     }
 
-    pub fn len(&self) -> usize {
-        match self {
-            HeaderName::Subject => "Subject".len(),
-            HeaderName::From => "From".len(),
-            HeaderName::To => "To".len(),
-            HeaderName::Cc => "Cc".len(),
-            HeaderName::Date => "Date".len(),
-            HeaderName::Bcc => "Bcc".len(),
-            HeaderName::ReplyTo => "Reply-To".len(),
-            HeaderName::Sender => "Sender".len(),
-            HeaderName::Comments => "Comments".len(),
-            HeaderName::InReplyTo => "In-Reply-To".len(),
-            HeaderName::Keywords => "Keywords".len(),
-            HeaderName::Received => "Received".len(),
-            HeaderName::MessageId => "Message-ID".len(),
-            HeaderName::References => "References".len(),
-            HeaderName::ReturnPath => "Return-Path".len(),
-            HeaderName::MimeVersion => "MIME-Version".len(),
-            HeaderName::ContentDescription => "Content-Description".len(),
-            HeaderName::ContentId => "Content-ID".len(),
-            HeaderName::ContentLanguage => "Content-Language".len(),
-            HeaderName::ContentLocation => "Content-Location".len(),
-            HeaderName::ContentTransferEncoding => "Content-Transfer-Encoding".len(),
-            HeaderName::ContentType => "Content-Type".len(),
-            HeaderName::ContentDisposition => "Content-Disposition".len(),
-            HeaderName::ResentTo => "Resent-To".len(),
-            HeaderName::ResentFrom => "Resent-From".len(),
-            HeaderName::ResentBcc => "Resent-Bcc".len(),
-            HeaderName::ResentCc => "Resent-Cc".len(),
-            HeaderName::ResentSender => "Resent-Sender".len(),
-            HeaderName::ResentDate => "Resent-Date".len(),
-            HeaderName::ResentMessageId => "Resent-Message-ID".len(),
-            HeaderName::ListArchive => "List-Archive".len(),
-            HeaderName::ListHelp => "List-Help".len(),
-            HeaderName::ListId => "List-ID".len(),
-            HeaderName::ListOwner => "List-Owner".len(),
-            HeaderName::ListPost => "List-Post".len(),
-            HeaderName::ListSubscribe => "List-Subscribe".len(),
-            HeaderName::ListUnsubscribe => "List-Unsubscribe".len(),
-            HeaderName::ArcAuthenticationResults => "ARC-Authentication-Results".len(),
-            HeaderName::ArcMessageSignature => "ARC-Message-Signature".len(),
-            HeaderName::ArcSeal => "ARC-Seal".len(),
-            HeaderName::DkimSignature => "DKIM-Signature".len(),
-            HeaderName::Dkim2Signature => "DKIM2-Signature".len(),
-            HeaderName::MessageInstance => "Message-Instance".len(),
-            HeaderName::Other(other) => other.len(),
-        }
+    /// Returns true if the default parser yields a structured value for this header.
+    pub fn is_structured(&self) -> bool {
+        matches!(
+            self,
+            HeaderName::Subject
+                | HeaderName::Comments
+                | HeaderName::ContentDescription
+                | HeaderName::ContentLocation
+                | HeaderName::ContentTransferEncoding
+                | HeaderName::From
+                | HeaderName::To
+                | HeaderName::Cc
+                | HeaderName::Bcc
+                | HeaderName::ReplyTo
+                | HeaderName::Sender
+                | HeaderName::ResentTo
+                | HeaderName::ResentFrom
+                | HeaderName::ResentBcc
+                | HeaderName::ResentCc
+                | HeaderName::ResentSender
+                | HeaderName::ListArchive
+                | HeaderName::ListHelp
+                | HeaderName::ListId
+                | HeaderName::ListOwner
+                | HeaderName::ListPost
+                | HeaderName::ListSubscribe
+                | HeaderName::ListUnsubscribe
+                | HeaderName::Date
+                | HeaderName::ResentDate
+                | HeaderName::MessageId
+                | HeaderName::References
+                | HeaderName::InReplyTo
+                | HeaderName::ReturnPath
+                | HeaderName::ContentId
+                | HeaderName::ResentMessageId
+                | HeaderName::Keywords
+                | HeaderName::ContentLanguage
+                | HeaderName::Received
+                | HeaderName::ContentType
+                | HeaderName::ContentDisposition
+        )
     }
 
     /// Returns true if it is a MIME header.
@@ -554,55 +362,6 @@ impl HeaderName<'_> {
 
     pub fn is_empty(&self) -> bool {
         false
-    }
-
-    pub fn id(&self) -> u8 {
-        match self {
-            HeaderName::Subject => 0,
-            HeaderName::From => 1,
-            HeaderName::To => 2,
-            HeaderName::Cc => 3,
-            HeaderName::Date => 4,
-            HeaderName::Bcc => 5,
-            HeaderName::ReplyTo => 6,
-            HeaderName::Sender => 7,
-            HeaderName::Comments => 8,
-            HeaderName::InReplyTo => 9,
-            HeaderName::Keywords => 10,
-            HeaderName::Received => 11,
-            HeaderName::MessageId => 12,
-            HeaderName::References => 13,
-            HeaderName::ReturnPath => 14,
-            HeaderName::MimeVersion => 15,
-            HeaderName::ContentDescription => 16,
-            HeaderName::ContentId => 17,
-            HeaderName::ContentLanguage => 18,
-            HeaderName::ContentLocation => 19,
-            HeaderName::ContentTransferEncoding => 20,
-            HeaderName::ContentType => 21,
-            HeaderName::ContentDisposition => 22,
-            HeaderName::ResentTo => 23,
-            HeaderName::ResentFrom => 24,
-            HeaderName::ResentBcc => 25,
-            HeaderName::ResentCc => 26,
-            HeaderName::ResentSender => 27,
-            HeaderName::ResentDate => 28,
-            HeaderName::ResentMessageId => 29,
-            HeaderName::ListArchive => 30,
-            HeaderName::ListHelp => 31,
-            HeaderName::ListId => 32,
-            HeaderName::ListOwner => 33,
-            HeaderName::ListPost => 34,
-            HeaderName::ListSubscribe => 35,
-            HeaderName::ListUnsubscribe => 36,
-            HeaderName::Other(_) => 37,
-            HeaderName::ArcAuthenticationResults => 38,
-            HeaderName::ArcMessageSignature => 39,
-            HeaderName::ArcSeal => 40,
-            HeaderName::DkimSignature => 41,
-            HeaderName::Dkim2Signature => 42,
-            HeaderName::MessageInstance => 43,
-        }
     }
 }
 

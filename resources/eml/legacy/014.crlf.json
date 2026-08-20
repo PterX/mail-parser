@@ -139,9 +139,7 @@
           "offset_end": 450
         },
         {
-          "name": {
-            "other": "Importance"
-          },
+          "name": "importance",
           "value": {
             "Text": "Normal"
           },

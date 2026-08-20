@@ -4,11 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0 OR MIT
  */
 
-use std::borrow::Cow;
-
-use crate::{Header, HeaderName, MessageParser};
-
 use super::MessageStream;
+use crate::{Header, HeaderName, MessageParser, header_map};
+use std::borrow::Cow;
+const MAX_HEADER_NAME_LEN: usize = 34;
 
 impl<'x> MessageStream<'x> {
     pub fn parse_headers(&mut self, conf: &MessageParser, headers: &mut Vec<Header<'x>>) -> bool {
@@ -100,7 +99,7 @@ impl<'x> MessageStream<'x> {
         let mut token_end: usize = 0;
         let mut token_len: usize = 0;
 
-        let mut header = [0u8; 30];
+        let mut header = [0u8; MAX_HEADER_NAME_LEN];
 
         while let Some(&ch) = self.next() {
             match ch {
@@ -123,15 +122,17 @@ impl<'x> MessageStream<'x> {
 
                         if let Some(header) = header.get_mut(token_len) {
                             *header = ch.to_ascii_lowercase();
-                            token_len += 1;
                         }
+                        token_len += 1;
                     }
                 }
             }
         }
 
         if token_start != 0 {
-            header_map(&header[..token_len])
+            header
+                .get(..token_len)
+                .and_then(header_map)
                 .unwrap_or_else(|| {
                     HeaderName::Other(String::from_utf8_lossy(
                         self.bytes(token_start - 1..token_end),
@@ -167,54 +168,6 @@ impl<'x> HeaderName<'x> {
     }
 }
 
-fn header_map(name: &[u8]) -> Option<HeaderName<'static>> {
-    hashify::tiny_map! {name,
-    "arc-authentication-results" => HeaderName::ArcAuthenticationResults,
-    "arc-seal" => HeaderName::ArcSeal,
-    "arc-message-signature" => HeaderName::ArcMessageSignature,
-    "bcc" => HeaderName::Bcc,
-    "cc" => HeaderName::Cc,
-    "comments" => HeaderName::Comments,
-    "content-description" => HeaderName::ContentDescription,
-    "content-disposition" => HeaderName::ContentDisposition,
-    "content-id" => HeaderName::ContentId,
-    "content-language" => HeaderName::ContentLanguage,
-    "content-location" => HeaderName::ContentLocation,
-    "content-transfer-encoding" => HeaderName::ContentTransferEncoding,
-    "content-type" => HeaderName::ContentType,
-    "date" => HeaderName::Date,
-    "dkim-signature" => HeaderName::DkimSignature,
-    "dkim2-signature" => HeaderName::Dkim2Signature,
-    "from" => HeaderName::From,
-    "in-reply-to" => HeaderName::InReplyTo,
-    "keywords" => HeaderName::Keywords,
-    "list-archive" => HeaderName::ListArchive,
-    "list-help" => HeaderName::ListHelp,
-    "list-id" => HeaderName::ListId,
-    "list-owner" => HeaderName::ListOwner,
-    "list-post" => HeaderName::ListPost,
-    "list-subscribe" => HeaderName::ListSubscribe,
-    "list-unsubscribe" => HeaderName::ListUnsubscribe,
-    "message-id" => HeaderName::MessageId,
-    "message-instance" => HeaderName::MessageInstance,
-    "mime-version" => HeaderName::MimeVersion,
-    "received" => HeaderName::Received,
-    "references" => HeaderName::References,
-    "reply-to" => HeaderName::ReplyTo,
-    "resent-bcc" => HeaderName::ResentBcc,
-    "resent-cc" => HeaderName::ResentCc,
-    "resent-date" => HeaderName::ResentDate,
-    "resent-from" => HeaderName::ResentFrom,
-    "resent-message-id" => HeaderName::ResentMessageId,
-    "resent-sender" => HeaderName::ResentSender,
-    "resent-to" => HeaderName::ResentTo,
-    "return-path" => HeaderName::ReturnPath,
-    "sender" => HeaderName::Sender,
-    "subject" => HeaderName::Subject,
-    "to" => HeaderName::To,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::{HeaderName, parsers::MessageStream};
@@ -232,6 +185,21 @@ mod tests {
             (" T : ", HeaderName::Other("T".into())),
             ("mal formed: ", HeaderName::Other("mal formed".into())),
             ("MIME-version : ", HeaderName::MimeVersion),
+            ("Delivered-To: ", HeaderName::DeliveredTo),
+            ("archived-AT: ", HeaderName::ArchivedAt),
+            ("X-Face: ", HeaderName::Other("X-Face".into())),
+            (
+                "Disposition-Notification-Options: ",
+                HeaderName::DispositionNotificationOptions,
+            ),
+            (
+                "MMHS-Other-Recipients-Indicator-To: ",
+                HeaderName::MmhsOtherRecipientsIndicatorTo,
+            ),
+            (
+                "Original-Encoded-Information-Types-Extra: ",
+                HeaderName::Other("Original-Encoded-Information-Types-Extra".into()),
+            ),
         ];
 
         for (input, expected_result) in inputs {
