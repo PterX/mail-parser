@@ -1,3 +1,7 @@
+mail-parser 0.11.7
+================================
+- Fix: `DateTime::to_timezone` corrupting non-whole-hour offsets by storing leftover seconds in `tz_minute` (#158)
+
 mail-parser 0.11.6
 ================================
 - Fix: Missing whitespace between a quoted name and a following encoded word (#150)

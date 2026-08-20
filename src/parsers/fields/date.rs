@@ -258,7 +258,7 @@ impl DateTime {
         dt.tz_before_gmt = tz < 0;
         let tz = tz.abs();
         dt.tz_hour = (tz / 3600) as u8;
-        dt.tz_minute = (tz % 3600) as u8;
+        dt.tz_minute = ((tz % 3600) / 60) as u8;
         dt
     }
 }
@@ -537,6 +537,32 @@ mod tests {
                 }
                 _ => {}
             }
+        }
+    }
+
+    #[test]
+    fn datetime_to_timezone() {
+        let dt = DateTime::parse_rfc3339("2021-01-01T00:00:00Z").unwrap();
+
+        for (tz, expected) in [
+            (0i64, "2021-01-01T00:00:00Z"),
+            (3600, "2021-01-01T01:00:00+01:00"),
+            (-3600, "2020-12-31T23:00:00-01:00"),
+            (19800, "2021-01-01T05:30:00+05:30"),
+            (-12600, "2020-12-31T20:30:00-03:30"),
+            (20700, "2021-01-01T05:45:00+05:45"),
+            (16200, "2021-01-01T04:30:00+04:30"),
+            (34200, "2021-01-01T09:30:00+09:30"),
+            (-45900, "2020-12-31T11:15:00-12:45"),
+        ] {
+            let converted = dt.to_timezone(tz);
+            assert_eq!(converted.to_rfc3339(), expected, "failed for tz {tz}");
+            assert!(converted.is_valid(), "invalid datetime for tz {tz}");
+            assert_eq!(
+                converted.to_timestamp(),
+                dt.to_timestamp(),
+                "roundtrip failed for tz {tz}"
+            );
         }
     }
 }
