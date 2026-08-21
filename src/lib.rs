@@ -220,8 +220,8 @@ macro_rules! header_names {
         #[cfg_attr(feature = "rkyv", rkyv(compare(PartialEq)))]
         #[non_exhaustive]
         pub enum HeaderName<'x> {
-            $($variant,)+
             Other(#[cfg_attr(feature = "rkyv", rkyv(with = rkyv::with::AsOwned))] Cow<'x, str>),
+            $($variant,)+
         }
 
         impl HeaderName<'_> {

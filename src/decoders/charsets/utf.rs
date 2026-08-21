@@ -98,7 +98,7 @@ pub(crate) fn decoder_utf7(bytes: &[u8]) -> String {
 
 fn decoder_utf16_(bytes: &[u8], fnc: fn([u8; 2]) -> u16) -> String {
     if bytes.len() >= 2 {
-        decode_utf16(bytes.chunks_exact(2).map(|c| fnc([c[0], c[1]])))
+        decode_utf16(bytes.as_chunks::<2>().0.iter().map(|c| fnc(*c)))
             .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
             .collect::<String>()
     } else {
