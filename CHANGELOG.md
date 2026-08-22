@@ -1,5 +1,6 @@
 mail-parser 0.11.8
 ================================
+- Fix: `HeaderName` breaks rkyv serialization from <= 0.11.6.
 
 mail-parser 0.11.7
 ================================
