@@ -1,3 +1,7 @@
+mail-parser 0.11.9
+================================
+- Added `base64_decode_slice` behind the new `base64_slice` feature, which adds a `memchr` dependency.
+
 mail-parser 0.11.8
 ================================
 - Fix: `HeaderName` breaks rkyv serialization from <= 0.11.6.

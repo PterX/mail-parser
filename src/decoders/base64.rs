@@ -4,13 +4,154 @@
  * SPDX-License-Identifier: Apache-2.0 OR MIT
  */
 
+use crate::parsers::MessageStream;
 use std::borrow::Cow;
 
-use crate::parsers::MessageStream;
+const B64_INVALID: u8 = 0xff;
+#[cfg(feature = "base64_slice")]
+const B64_STOP_SCAN: usize = 512;
+
+static BASE64_DECODE: [u8; 256] = base64_decode_table();
+
+const fn base64_decode_table() -> [u8; 256] {
+    let mut table = [B64_INVALID; 256];
+    let mut value = 0u8;
+    while value < 64 {
+        let ch = match value {
+            0..=25 => b'A' + value,
+            26..=51 => b'a' + (value - 26),
+            52..=61 => b'0' + (value - 52),
+            62 => b'+',
+            _ => b'/',
+        };
+        table[ch as usize] = value;
+        value += 1;
+    }
+    table
+}
+
+enum Base64Byte {
+    Consumed,
+    Stop,
+    Invalid,
+}
+
+struct Base64Decoder {
+    chunk: u32,
+    byte_count: u8,
+    buf: Vec<u8>,
+}
+
+impl Base64Decoder {
+    fn with_capacity(capacity: usize) -> Self {
+        Base64Decoder {
+            chunk: 0,
+            byte_count: 0,
+            buf: Vec::with_capacity(capacity),
+        }
+    }
+
+    #[inline(always)]
+    fn push(&mut self, ch: u8, stop_char: u8) -> Base64Byte {
+        let val = BASE64_DECODE[ch as usize];
+        if val < 0x40 {
+            self.chunk = (self.chunk << 6) | val as u32;
+            self.byte_count = (self.byte_count + 1) & 3;
+            if self.byte_count == 0 {
+                self.buf.extend_from_slice(&self.chunk.to_be_bytes()[1..]);
+            }
+            Base64Byte::Consumed
+        } else if ch == b'=' {
+            self.flush();
+            Base64Byte::Consumed
+        } else if matches!(ch, b' ' | b'\t' | b'\r' | b'\n') {
+            Base64Byte::Consumed
+        } else if ch == stop_char {
+            Base64Byte::Stop
+        } else {
+            Base64Byte::Invalid
+        }
+    }
+
+    #[inline(always)]
+    fn decode_groups<'a>(&mut self, mut rest: &'a [u8]) -> &'a [u8] {
+        if self.byte_count != 0 {
+            return rest;
+        }
+        while let [a, b, c, d, tail @ ..] = rest {
+            let a = BASE64_DECODE[*a as usize];
+            let b = BASE64_DECODE[*b as usize];
+            let c = BASE64_DECODE[*c as usize];
+            let d = BASE64_DECODE[*d as usize];
+            if a | b | c | d >= 0x40 {
+                break;
+            }
+            let word = ((a as u32) << 18) | ((b as u32) << 12) | ((c as u32) << 6) | d as u32;
+            self.buf.extend_from_slice(&word.to_be_bytes()[1..]);
+            rest = tail;
+        }
+        rest
+    }
+
+    #[inline(always)]
+    fn flush(&mut self) {
+        match self.byte_count {
+            2 => self.buf.push((self.chunk >> 4) as u8),
+            3 => self
+                .buf
+                .extend_from_slice(&[(self.chunk >> 10) as u8, (self.chunk >> 2) as u8]),
+            _ => (),
+        }
+        self.byte_count = 0;
+    }
+
+    fn finish(mut self) -> Vec<u8> {
+        self.flush();
+        self.buf
+    }
+}
+
+#[cfg(feature = "base64_slice")]
+#[inline(always)]
+fn base64_capacity(bytes: &[u8], stop_char: u8) -> usize {
+    let len = if BASE64_DECODE[stop_char as usize] == B64_INVALID
+        && stop_char != b'='
+        && !matches!(stop_char, b' ' | b'\t' | b'\r' | b'\n')
+    {
+        let window = bytes.len().min(B64_STOP_SCAN);
+        memchr::memchr(stop_char, bytes.get(..window).unwrap_or(bytes)).unwrap_or(bytes.len())
+    } else {
+        bytes.len()
+    };
+    len.div_ceil(4) * 3
+}
 
 #[inline(always)]
 pub fn base64_decode(bytes: &[u8]) -> Option<Vec<u8>> {
-    base64_decode_stream(bytes.iter(), bytes.len(), u8::MAX)
+    decode_slice(bytes, u8::MAX, bytes.len().div_ceil(4) * 3).map(|(decoded, _)| decoded)
+}
+
+#[cfg(feature = "base64_slice")]
+pub fn base64_decode_slice(bytes: &[u8], stop_char: u8) -> Option<(Vec<u8>, usize)> {
+    decode_slice(bytes, stop_char, base64_capacity(bytes, stop_char))
+}
+
+fn decode_slice(bytes: &[u8], stop_char: u8, capacity: usize) -> Option<(Vec<u8>, usize)> {
+    let mut decoder = Base64Decoder::with_capacity(capacity);
+    let mut rest = bytes;
+    loop {
+        rest = decoder.decode_groups(rest);
+        let Some((&ch, tail)) = rest.split_first() else {
+            break;
+        };
+        rest = tail;
+        match decoder.push(ch, stop_char) {
+            Base64Byte::Consumed => (),
+            Base64Byte::Stop => return Some((decoder.finish(), bytes.len() - rest.len())),
+            Base64Byte::Invalid => return None,
+        }
+    }
+    Some((decoder.finish(), bytes.len()))
 }
 
 pub fn base64_decode_stream<'x>(
@@ -18,49 +159,15 @@ pub fn base64_decode_stream<'x>(
     stream_len: usize,
     stop_char: u8,
 ) -> Option<Vec<u8>> {
-    let mut chunk: u32 = 0;
-    let mut byte_count: u8 = 0;
-
-    let mut buf = Vec::with_capacity(stream_len / 4 * 3);
-
+    let mut decoder = Base64Decoder::with_capacity(stream_len / 4 * 3);
     for &ch in stream {
-        let val = BASE64_MAP[byte_count as usize][ch as usize];
-
-        if val < 0x01ffffff {
-            byte_count = (byte_count + 1) & 3;
-
-            if byte_count == 1 {
-                chunk = val;
-            } else {
-                chunk |= val;
-
-                if byte_count == 0 {
-                    buf.extend_from_slice(&chunk.to_le_bytes()[0..3]);
-                }
-            }
-        } else {
-            match ch {
-                b'=' => match byte_count {
-                    1 | 2 => {
-                        buf.push(chunk.to_le_bytes()[0]);
-                        byte_count = 0;
-                    }
-                    3 => {
-                        buf.extend_from_slice(&chunk.to_le_bytes()[0..2]);
-                        byte_count = 0;
-                    }
-                    0 => (),
-                    _ => {
-                        return None;
-                    }
-                },
-                b' ' | b'\t' | b'\r' | b'\n' => (),
-                _ => return if ch == stop_char { buf.into() } else { None },
-            }
+        match decoder.push(ch, stop_char) {
+            Base64Byte::Consumed => (),
+            Base64Byte::Stop => return Some(decoder.finish()),
+            Base64Byte::Invalid => return None,
         }
     }
-
-    buf.into()
+    Some(decoder.finish())
 }
 
 impl<'x> MessageStream<'x> {
